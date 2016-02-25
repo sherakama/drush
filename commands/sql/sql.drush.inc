@@ -77,7 +77,8 @@ function sql_drush_command() {
         ),
       ),
     'examples' => array(
-      '`drush sql-connect` < example.sql' => 'Import sql statements from a file into the current database.',
+      '`drush sql-connect` < example.sql' => 'Bash: Import SQL statements from a file into the current database.',
+      'eval (drush sql-connect) < example.sql' => 'Fish: Import SQL statements from a file into the current database.',
     ),
   );
   $items['sql-create'] = array(
@@ -183,16 +184,6 @@ function sql_drush_help_alter(&$command) {
       unset($command['options']['target']['hidden']);
     }
   }
-}
-
-/**
- * Command argument complete callback.
- *
- * @return
- *  Array of available site aliases.
- */
-function sql_sql_sync_complete() {
-  return array('values' => array_keys(_drush_sitealias_all_list()));
 }
 
 /**
@@ -544,7 +535,7 @@ function _drush_sql_get_post_sync_messages() {
 
   $options = drush_get_context('post-sync-ops');
   if (!empty($options)) {
-    $messages = dt('The following post-sync operations will be done on the destination:') . "\n";
+    $messages = dt('The following operations will be done on the target database:') . "\n";
 
     foreach($options as $id => $data) {
       $messages .= "  * " . $data['message'] . "\n";
@@ -570,8 +561,10 @@ function drush_sql_get_class($db_spec = NULL) {
   $target = drush_get_option('target', 'default');
 
   // Try a few times to quickly get $db_spec.
-  if ($db_spec) {
-    return drush_get_class(array('Drush\Sql\Sql', 'Drupal\Driver\Database\\' .  $db_spec['driver'] . '\Drush'), array($db_spec), array($db_spec['driver']));
+  if (!empty($db_spec)) {
+    if (!empty($db_spec['driver'])) {
+      return drush_get_class(array('Drush\Sql\Sql', 'Drupal\Driver\Database\\' .  $db_spec['driver'] . '\Drush'), array($db_spec), array($db_spec['driver']));
+    }
   }
   elseif ($url = drush_get_option('db-url')) {
     $url =  is_array($url) ? $url[$database] : $url;
